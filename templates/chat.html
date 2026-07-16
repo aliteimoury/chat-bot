@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style-chat.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>علی شاپ - چت‌بات هوشمند</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <button class="btn-products" onclick="openProductsModal()">📦 محصولات</button>
+            {% if is_admin %}
+            <button class="btn-admin" onclick="window.location.href='/admin'">🛠️ پنل مدیریت</button>
+            {% endif %}
+            <button class="btn-logout" onclick="window.location.href='/logout'">🚪 خروج</button>
+            <h1>🛍️ علی شاپ</h1>
+            <p>دستیار هوشمند فروشگاه | خوش آمدید {{ user_email }}</p>
+        </div>
+
+
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-bubble">
+                    سلام! به فروشگاه علی شاپ خوش آمدید 👋<br>
+                    می‌توانید قیمت، مشخصات و یا مقایسه محصولات را بپرسید.
+                </div>
+                <div class="message-time">{{ now }}</div>
+            </div>
+        </div>
+
+        <div class="typing" id="typing">🤖 علی شاپ در حال تایپ...</div>
+
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="سوال خود را بپرسید..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">📤 ارسال</button>
+        </div>
+    </div>
+
+    <!-- مودال محصولات -->
+    <div id="productsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📦 محصولات فروشگاه</h2>
+                <button class="close-modal" onclick="closeProductsModal()">✕</button>
+            </div>
+            <div id="categoryBtns"></div>
+            <div id="productsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const typing = document.getElementById('typing');
+        const messageInput = document.getElementById('messageInput');
+
+        let productsData = {{ products | tojson }};
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') sendMessage();
+        }
+
+        function addMessage(text, isUser, time) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            messageDiv.innerHTML = `<div class="message-bubble">${text}</div><div class="message-time">${time}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            messageInput.value = '';
+            const now = new Date().toLocaleTimeString('fa-IR');
+            addMessage(message, true, now);
+            typing.classList.add('active');
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                typing.classList.remove('active');
+                addMessage(data.reply, false, new Date().toLocaleTimeString('fa-IR'));
+            } catch (error) {
+                typing.classList.remove('active');
+                addMessage('❌ خطا در ارتباط با سرور', false, new Date().toLocaleTimeString('fa-IR'));
+            }
+        }
+
+        function openProductsModal() {
+            document.getElementById('productsModal').style.display = 'flex';
+            showCategory('همه');
+        }
+
+        function closeProductsModal() {
+            document.getElementById('productsModal').style.display = 'none';
+        }
+
+        function showCategory(category) {
+            let filtered = [];
+            if (category === 'همه') {
+                filtered = productsData;
+            } else {
+                filtered = productsData.filter(p => p.category === category);
+            }
+
+            const categories = ['همه', ...new Set(productsData.map(p => p.category))];
+            let btnsHtml = '';
+            categories.forEach(cat => {
+                btnsHtml += `<button class="category-btn" onclick="showCategory('${cat}')">${cat}</button>`;
+            });
+            document.getElementById('categoryBtns').innerHTML = btnsHtml;
+
+            let productsHtml = '';
+            filtered.forEach(p => {
+                productsHtml += `
+                    <div class="product-item">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">💰 ${p.price}</div>
+                        <div style="font-size:12px; color:#666;">⚙️ ${p.specs}</div>
+                        <div style="font-size:12px;">📝 ${p.description}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('productsList').innerHTML = productsHtml;
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('productsModal');
+            if (event.target === modal) closeProductsModal();
+        }
+
+        // نمایش اولیه محصولات در مودال
+        showCategory('همه');
+    </script>
+</body>
+</html>

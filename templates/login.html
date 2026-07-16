@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style-login.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود | علی شاپ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <div class="login-container">
+        <h1>🛍️ علی شاپ</h1>
+        <p>برای استفاده از چت‌بات لطفاً وارد شوید</p>
+
+        <div class="tabs">
+            <button class="tab {% if not show_register %}active{% endif %}" onclick="showPanel('login')">ورود</button>
+            <button class="tab {% if show_register %}active{% endif %}" onclick="showPanel('register')">ثبت نام</button>
+        </div>
+
+        <div id="loginPanel" class="form-panel {% if not show_register %}active{% endif %}">
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label>ایمیل</label>
+                    <input type="email" name="email" value="{{ login_email or '' }}" required placeholder="example@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>رمز عبور</label>
+                    <input type="password" name="password" value="{{ login_password or '' }}" required>
+                </div>
+                <button type="submit" class="btn">ورود</button>
+            </form>
+            {% if login_error %}
+            <div class="message error">{{ login_error }}</div>
+            {% endif %}
+        </div>
+
+        <div id="registerPanel" class="form-panel {% if show_register %}active{% endif %}">
+            <form method="POST" action="/register">
+                <div class="form-group">
+                    <label>ایمیل (نام کاربری شما)</label>
+                    <input type="email" name="email" value="{{ register_email or '' }}" required placeholder="example@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>رمز عبور</label>
+                    <input type="password" name="password" value="{{ register_password or '' }}" required>
+                </div>
+                <button type="submit" class="btn">ثبت نام</button>
+            </form>
+            {% if register_error %}
+            <div class="message error">{{ register_error }}</div>
+            {% endif %}
+            {% if register_success %}
+            <div class="message success">{{ register_success }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function showPanel(panel) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            if (panel === 'login') {
+                document.querySelector('.tab').classList.add('active');
+                document.getElementById('loginPanel').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('registerPanel').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

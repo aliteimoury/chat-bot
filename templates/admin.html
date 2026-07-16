@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style-admin.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت علی شاپ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ پنل مدیریت فروشگاه علی شاپ</h1>
+            <p>مدیریت محصولات، مشاهده مکالمات و تنظیمات فروشگاه</p>
+        </div>
+
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('products')">📦 مدیریت محصولات</button>
+            <button class="tab-btn" onclick="showTab('add')">➕ افزودن محصول دستی</button>
+            <button class="tab-btn" onclick="openScraperModal()">🔄 محصول خودکار از دیجی‌کالا</button>
+            <button class="tab-btn" onclick="showTab('logs')">📜 تاریخچه مکالمات</button>
+        </div>
+
+        <!-- تب محصولات -->
+        <div id="products" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ products|length }}</div>
+                    <div class="stat-label">محصولات فعال</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ logs|length }}</div>
+                    <div class="stat-label">مکالمات ثبت شده</div>
+                </div>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}" style="padding: 15px; margin: 20px 0; border-radius: 10px; {% if category == 'success' %}background: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% else %}background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+            <table class="products-table">
+                <thead>
+                    <tr><th>شناسه</th><th>نام محصول</th><th>دسته‌بندی</th><th>قیمت</th><th>عملیات</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.name }}</td>
+                        <td>{{ p.category }}</td>
+                        <td>{{ p.price }}</td>
+                        <td>
+                            <button onclick="openEditModal({{ p.id }}, '{{ p.name }}', '{{ p.category }}', '{{ p.price|replace(' تومان', '') }}', '{{ p.specs }}', '{{ p.description }}')" class="edit-btn" style="background:#ffc107; color:#333; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin-left:5px;">✏️ ویرایش</button>
+                            <form action="/delete/{{ p.id }}" method="POST" style="display:inline">
+                                <button type="submit" class="delete-btn" onclick="return confirm('آیا از حذف این محصول مطمئن هستید؟')">🗑️ حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- مدال ویرایش -->
+<div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:20px; padding:30px; max-width:600px; width:90%; max-height:90%; overflow:auto;">
+        <h2 style="margin-bottom:20px;">✏️ ویرایش محصول</h2>
+        <form method="POST" action="/edit" id="editForm">
+            <input type="hidden" name="id" id="edit_id">
+            <div class="form-group">
+                <label>نام محصول</label>
+                <input type="text" name="name" id="edit_name" required>
+            </div>
+            <div class="form-group">
+                <label>دسته‌بندی</label>
+                <select name="category" id="edit_category" required>
+                    <option value="موبایل">📱 موبایل</option>
+                    <option value="لپ‌تاپ">💻 لپ‌تاپ</option>
+                    <option value="هدفون">🎧 هدفون</option>
+                    <option value="تبلت">📟 تبلت</option>
+                    <option value="ساعت هوشمند">⌚ ساعت هوشمند</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>قیمت (فقط عدد)</label>
+                <input type="text" name="price" id="edit_price" required>
+                <small>تومان به طور خودکار اضافه می‌شود</small>
+            </div>
+            <div class="form-group">
+                <label>مشخصات فنی</label>
+                <textarea name="specs" id="edit_specs" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>توضیحات</label>
+                <textarea name="description" id="edit_description" rows="2"></textarea>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button type="submit" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">💾 ذخیره تغییرات</button>
+                <button type="button" onclick="closeEditModal()" style="background:#6c757d; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">❌ انصراف</button>
+            </div>
+        </form>
+    </div>
+</div>
+        </div>
+
+        <!-- تب افزودن محصول با فرم هوشمند -->
+        <div id="add" class="tab-content">
+            <div class="form-container">
+                <form method="POST" action="/add" id="productForm">
+                    <div class="form-group">
+                        <label>نام محصول <span class="required">*</span></label>
+                        <input type="text" name="name" placeholder="مثال: گوشی سامسونگ Galaxy A54" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>دسته‌بندی <span class="required">*</span></label>
+                        <select name="category" id="category" required onchange="updateSpecFields()">
+                            <option value="">انتخاب کنید...</option>
+                            <option value="موبایل">📱 موبایل</option>
+                            <option value="لپ‌تاپ">💻 لپ‌تاپ</option>
+                            <option value="هدفون">🎧 هدفون</option>
+                            <option value="تبلت">📟 تبلت</option>
+                            <option value="ساعت هوشمند">⌚ ساعت هوشمند</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>قیمت <span class="required">*</span></label>
+                        <div class="price-input-wrapper" style="position: relative;">
+                            <input type="text" name="price" id="priceInput" placeholder="مثال: 15,500,000" required style="padding-left: 70px;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: #e9ecef; padding: 4px 12px; border-radius: 20px; font-size: 13px;">تومان</span>
+                        </div>
+                        <small style="color: #6c757d; display: block; margin-top: 5px;">💡 فقط عدد وارد کنید (مثل 15,500,000)</small>
+                    </div>
+
+                    <!-- بخش مشخصات فنی هوشمند -->
+                    <div class="form-group">
+                        <label>مشخصات فنی <span class="required">*</span></label>
+                        <div id="specsFields"></div>
+                        <input type="hidden" name="specs" id="specsHidden">
+                        <div class="specs-preview" id="specsPreview">
+                            🔍 با انتخاب دسته‌بندی، فیلدهای مشخصات نمایش داده می‌شوند...
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>توضیحات محصول</label>
+                        <textarea name="description" placeholder="توضیحات کوتاه درباره محصول..." rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">✅ ذخیره محصول</button>
+                </form>
+
+                {% if message %}
+                <div class="message {{ message.type }}">{{ message.text }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- تب مکالمات -->
+        <div id="logs" class="tab-content">
+            <h2 style="margin-bottom: 20px;">📜 تاریخچه مکالمات مشتریان</h2>
+            {% if logs %}
+                {% for log in logs[-30:]|reverse %}
+                <div class="log-item">
+                    <div class="log-time">
+                        🕒 {{ log.time }}
+                        <span class="badge">مکالمه {{ loop.index }}</span>
+                    </div>
+                    <div class="log-question">❓ سوال: {{ log.question }}</div>
+                    <div class="log-answer">💬 پاسخ: {{ log.answer[:300] }}{% if log.answer|length > 300 %}...{% endif %}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="message" style="background:#f8f9fa; color:#6c757d; text-align:center">
+                    📭 هنوز هیچ مکالمه‌ای ثبت نشده است.
+                </div>
+            {% endif %}
+        </div>
+        <div id="scraperModal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🔄 آپدیت از دیجی‌کالا</h2>
+        </div>
+
+        <div class="form-group">
+            <label>دسته‌بندی محصول</label>
+            <select id="scraperCategory">
+                <option value="mobile">📱 موبایل</option>
+                <option value="laptop">💻 لپ‌تاپ</option>
+                <option disabled>🎧 هدفون (به‌زودی)</option>
+            </select>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="btn-scrape" onclick="runScraper()">🚀 شروع استخراج</button>
+            <button class="btn-cancel" onclick="closeScraperModal()">❌ بستن</button>
+        </div>
+    </div>
+</div>
+
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <h2>در حال استخراج محصولات...</h2>
+        <p>لطفاً صبر کنید، این کار ممکن است کمی زمان ببرد</p>
+    </div>
+</div>
+    </div>
+
+
+
+    <script>
+        // تعریف فیلدهای مشخصات برای هر دسته
+        const specTemplates = {
+            "موبایل": [
+                { name: "ram", label: "رم", placeholder: "عدد را وارد کنید", unit: "گیگابایت" },
+                { name: "storage", label: "حافظه داخلی", placeholder: "عدد را وارد کنید", unit: "گیگابایت" },
+                { name: "camera", label: "دوربین", placeholder: "عدد را وارد کنید", unit: "مگاپیکسل" },
+                { name: "battery", label: "باتری", placeholder: "عدد را وارد کنید", unit: "میلی‌آمپر" },
+                { name: "display", label: "نمایشگر", placeholder: "مثال: ۶.۴ اینچ AMOLED", unit: "" }
+            ],
+            "لپ‌تاپ": [
+                { name: "cpu", label: "پردازنده", placeholder: "مثال: Intel i7", unit: "" },
+                { name: "ram", label: "رم", placeholder: "عدد را وارد کنید", unit: "گیگابایت" },
+                { name: "graphics", label: "گرافیک", placeholder: "مثال: RTX 3050", unit: "" },
+                { name: "storage", label: "حافظه", placeholder: "عدد را وارد کنید", unit: "گیگابایت" },
+                { name: "display", label: "نمایشگر", placeholder: "مثال: ۱۵.۶ اینچ", unit: "" }
+            ],
+            "هدفون": [
+                { name: "type", label: "نوع", placeholder: "مثال: بیسیم / سیمی" },
+                { name: "battery", label: "باتری", placeholder: "مثال: ۳۰ ساعت" },
+                { name: "noise", label: "نویز کنسلینگ", placeholder: "مثال: دارد / ندارد" },
+                { name: "connectivity", label: "اتصال", placeholder: "مثال: بلوتوث ۵.۲" }
+            ],
+            "تبلت": [
+                { name: "ram", label: "رم", placeholder: "مثال: ۸ گیگابایت" },
+                { name: "storage", label: "حافظه", placeholder: "مثال: ۱۲۸ گیگابایت" },
+                { name: "display", label: "نمایشگر", placeholder: "مثال: ۱۰.۵ اینچ" },
+                { name: "battery", label: "باتری", placeholder: "مثال: ۷۰۰۰ میلی‌آمپر" }
+            ],
+            "ساعت هوشمند": [
+                { name: "display", label: "نمایشگر", placeholder: "مثال: ۱.۴ اینچ AMOLED" },
+                { name: "battery", label: "باتری", placeholder: "مثال: ۳ روز" },
+                { name: "features", label: "ویژگی‌ها", placeholder: "مثال: GPS, ضربان قلب" },
+                { name: "compatible", label: "سازگاری", placeholder: "مثال: Android / iOS" }
+            ]
+        };
+
+        function updateSpecFields() {
+            const category = document.getElementById('category').value;
+            const container = document.getElementById('specsFields');
+            const preview = document.getElementById('specsPreview');
+
+            if (!category || !specTemplates[category]) {
+                container.innerHTML = '<div style="color: #6c757d; padding: 20px; text-align: center;">📌 لطفاً ابتدا دسته‌بندی را انتخاب کنید</div>';
+                preview.innerHTML = '🔍 با انتخاب دسته‌بندی، فیلدهای مشخصات نمایش داده می‌شوند...';
+                return;
+            }
+
+            const fields = specTemplates[category];
+            let html = '<div class="specs-row">';
+            fields.forEach(field => {
+        html += `
+    <div class="spec-item">
+        <label>${field.label}</label>
+        <input type="text" class="spec-input" data-field="${field.name}" placeholder="${field.placeholder}" oninput="updateSpecsPreview()">
+    </div>
+`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            updateSpecsPreview();
+        }
+
+function updateSpecsPreview() {
+    const inputs = document.querySelectorAll('.spec-input');
+    const preview = document.getElementById('specsPreview');
+    const hidden = document.getElementById('specsHidden');
+    const category = document.getElementById('category').value;
+
+    let specsList = [];
+    let index = 0;
+    inputs.forEach(input => {
+        if (input.value.trim()) {
+            const fieldData = specTemplates[category]?.[index];
+            const label = fieldData.label;
+            let value = input.value.trim();
+            const unit = fieldData.unit;
+
+            if (unit && !isNaN(parseInt(value))) {
+                value = value + ' ' + unit;
+            }
+
+            specsList.push(`${label} ${value}`);
+        }
+        index++;
+    });
+
+    const specsText = specsList.join(' - ');
+    preview.innerHTML = specsText ? `📝 پیش‌نمایش مشخصات:<br><code style="direction: ltr; display: inline-block; background:white; padding:8px; border-radius:5px;">${specsText}</code>` : '🔍 لطفاً فیلدهای بالا را پر کنید...';
+    hidden.value = specsText;
+}
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // هنگام ارسال فرم، مطمئن شو specsHidden مقدار دارد
+        document.getElementById('productForm')?.addEventListener('submit', function(e) {
+            updateSpecsPreview();
+        });
+        function openEditModal(id, name, category, price, specs, description) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_category').value = category;
+    document.getElementById('edit_price').value = price.replace(/[^0-9]/g, '');
+    document.getElementById('edit_specs').value = specs;
+    document.getElementById('edit_description').value = description;
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    let editModal = document.getElementById("editModal");
+    let scraperModal = document.getElementById("scraperModal");
+
+    if (event.target == editModal) {
+        editModal.style.display = "none";
+    }
+
+    if (event.target == scraperModal) {
+        scraperModal.style.display = "none";
+    }
+}
+
+function openScraperModal() {
+    document.getElementById('scraperModal').style.display = 'flex';
+}
+
+function closeScraperModal() {
+    document.getElementById('scraperModal').style.display = 'none';
+}
+
+function runScraper() {
+    closeScraperModal();
+    document.getElementById("loadingOverlay").style.display = "flex";
+
+    fetch("/run_scraper", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            category: document.getElementById("scraperCategory").value,
+            count: 25  // تعداد محصولات
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // به محض دریافت پاسخ از سرور، لودینگ رو ببند و صفحه رو رفرش کن
+        document.getElementById("loadingOverlay").style.display = "none";
+        alert(data.message || "اسکرپر با موفقیت اجرا شد!");
+        window.location.href = "/admin";
+    })
+    .catch(error => {
+        document.getElementById("loadingOverlay").style.display = "none";
+        alert("خطا در اجرای اسکرپر: " + error);
+        console.log(error);
+    });
+}
+
+
+
+    </script>
+
+
+</body>
+</html>

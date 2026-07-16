@@ -1,0 +1,226 @@
+[
+    {
+        "id": 1,
+        "name": "گوشی اپل مدل iPhone 17 Pro Max ZAA",
+        "category": "موبایل",
+        "price": "348,999,000 تومان",
+        "specs": "رم 12 گیگابایت  - حافظه 256 گیگابایت  - دوربین 3 ماژول دوربین  - باتری 4823 میلی آمپر ساعت",
+        "description": "نمایشگر 6.9 اینچ"
+    },
+    {
+        "id": 2,
+        "name": "گوشی ناتینگ مدل Phone 2a",
+        "category": "موبایل",
+        "price": "56,840,000 تومان",
+        "specs": "رم 8 گیگابایت  - حافظه 128 گیگابایت  - دوربین 2 ماژول دوربین  - باتری 5000 میلی آمپر ساعت",
+        "description": "نمایشگر 6.7 اینچ"
+    },
+    {
+        "id": 3,
+        "name": "لپتاپ ASus",
+        "category": "لپ‌تاپ",
+        "price": "67,500,000 تومان",
+        "specs": "پردازنده intel i7 - رم 16 گیگابایت - گرافیک RTX3050 - حافظه 512 گیگابایت - نمایشگر 15.6",
+        "description": ""
+    },
+    {
+        "id": 4,
+        "name": "لپ‌تاپ 15.6\" ایسوس مدل Vivobook 15 X1504VA-BQ4675",
+        "category": "لپ‌تاپ",
+        "price": "71,500,000 تومان",
+        "specs": "پردازنده Core i3 - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 5,
+        "name": "لپ‌تاپ 15.6\" اچ‌پی مدل Victus 15 fa2013dx",
+        "category": "لپ‌تاپ",
+        "price": "111,870,000 تومان",
+        "specs": "پردازنده Core i5 - رم نامشخص - گرافیک NVIDIA GeForce RTX 3050 - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 6,
+        "name": "لپ‌تاپ 15.6\" لنوو مدل LOQ 15ARP9-R5 7235HS-RTX3050 A 4GB",
+        "category": "لپ‌تاپ",
+        "price": "119,999,990 تومان",
+        "specs": "پردازنده Ryzen 5 - رم نامشخص - گرافیک NVIDIA GeForce RTX 3050 - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 7,
+        "name": "لپ‌تاپ لنوو مدل IdeaPad 1 15IJL7 با پردازنده Celeron N4500، رم DDR4 8GB با فرکانس 2933MHz، حافظه SSD با ظرفیت 256GB، نمایشگر 15.6 اینچ TN با وضوح Full HD",
+        "category": "لپ‌تاپ",
+        "price": "46,000,000 تومان",
+        "specs": "پردازنده Celeron - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 8,
+        "name": "لپ‌تاپ ایسوس مدل Vivobook Go 14 E410KA-CL464 با پردازنده Celeron N4500، رم DDR4 4GB، حافظه eMMC با ظرفیت 64GB، نمایشگر 14 اینچ TN با وضوح HD، دارای نامبرپد دیجیتال",
+        "category": "لپ‌تاپ",
+        "price": "40,599,000 تومان",
+        "specs": "پردازنده Celeron - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 64 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 9,
+        "name": "لپ‌تاپ 16\" ایسر مدل Aspire Lite AL16-52P-32E3",
+        "category": "لپ‌تاپ",
+        "price": "66,499,000 تومان",
+        "specs": "پردازنده Core i3 - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 10,
+        "name": "لپ‌تاپ 15.6\" اچ‌ پی مدل Victus 15 Gaming fa2082wm",
+        "category": "لپ‌تاپ",
+        "price": "160,000,000 تومان",
+        "specs": "پردازنده Core i5 - رم نامشخص - گرافیک NVIDIA GeForce RTX 4050 - حافظه یک ترابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 11,
+        "name": "لپ‌تاپ 13.6\" اپل مدل MacBook Air MC6T4 2025 ZAA-M4",
+        "category": "لپ‌تاپ",
+        "price": "189,000,000 تومان",
+        "specs": "پردازنده M4 - رم نامشخص - گرافیک Apple M4 (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 12,
+        "name": "لپ‌تاپ 13.3\" لنوو مدل ThinkPad L13 Gen 3",
+        "category": "لپ‌تاپ",
+        "price": "89,990,000 تومان",
+        "specs": "پردازنده Core i5 - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 13,
+        "name": "لپ‌تاپ ایسوس مدل Vivobook Go 14 E410KA-CL464 با پردازنده Celeron N4500، رم DDR4 4GB با فرکانس 3200MHz، حافظه هیبریدی با ظرفیت 256GB حافظه SSD و 64GB حافظه eMMC، نمایشگر لمسی 14 اینچ TN با وضوح Full HD، دارای نامبرپد دیجیتال، سیستم‌عامل Windows، کاستوم شده",
+        "category": "لپ‌تاپ",
+        "price": "46,599,000 تومان",
+        "specs": "پردازنده Celeron - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 14,
+        "name": "لپ‌تاپ 13\" اپل مدل MacBook Neo LLA-A18 Pro",
+        "category": "لپ‌تاپ",
+        "price": "140,980,000 تومان",
+        "specs": "پردازنده Apple A (Mobile Processor) - رم نامشخص - گرافیک Apple A18 Pro (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 15,
+        "name": "لپ‌تاپ 15.6\" اچ‌ پی مدل Victus 15 fb3120AX-R7 7445HS",
+        "category": "لپ‌تاپ",
+        "price": "135,000,000 تومان",
+        "specs": "پردازنده Ryzen 7 - رم نامشخص - گرافیک NVIDIA GeForce RTX 3050 - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 16,
+        "name": "لپ‌تاپ لنوو مدل IdeaPad Slim 3 15IRU8 با پردازنده Core i3-1315U، رم LPDDR5 8GB با فرکانس 4800MHz، حافظه SSD با ظرفیت 256GB، نمایشگر 15.6 اینچ TN با وضوح Full HD",
+        "category": "لپ‌تاپ",
+        "price": "70,900,000 تومان",
+        "specs": "پردازنده Core i3 - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 17,
+        "name": "لپ‌تاپ 13.6\" اپل مدل MacBook Air MDH74 2026 LLA-M5",
+        "category": "لپ‌تاپ",
+        "price": "225,970,000 تومان",
+        "specs": "پردازنده M5 - رم نامشخص - گرافیک Apple M5 (integrated) - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 18,
+        "name": "لپ‌تاپ 15.6\" لنوو مدل LOQ 15IRX10",
+        "category": "لپ‌تاپ",
+        "price": "206,000,000 تومان",
+        "specs": "پردازنده نامشخص - رم نامشخص - گرافیک NVIDIA GeForce RTX 5050 - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 19,
+        "name": "لپ‌تاپ 18\" لنوو مدل Legion 9 18IAX10",
+        "category": "لپ‌تاپ",
+        "price": "1,175,800,000 تومان",
+        "specs": "پردازنده Core Ultra 9 - رم نامشخص - گرافیک NVIDIA GeForce RTX 5090 - حافظه چهار ترابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 20,
+        "name": "لپ‌تاپ 15.6\" ایسر مدل Aspire Lite AL15-72P-595Y",
+        "category": "لپ‌تاپ",
+        "price": "95,000,000 تومان",
+        "specs": "پردازنده Core i5 - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 21,
+        "name": "لپ‌تاپ 15.6\" ایسر مدل Aspire 5 A15-51M-5996",
+        "category": "لپ‌تاپ",
+        "price": "79,899,000 تومان",
+        "specs": "پردازنده Core i5 ۱۳۴۲۰H - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 22,
+        "name": "لپ‌تاپ 15.6\" ایسوس مدل Vivobook 15 F1504VAP-WH56",
+        "category": "لپ‌تاپ",
+        "price": "101,800,000 تومان",
+        "specs": "پردازنده Core 5 - رم نامشخص - گرافیک Intel Intel Graphics (integrated) - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 23,
+        "name": "لپ‌تاپ 16\" ایسوس مدل TUF Gaming A16 FA607NUG-WH73-R7 7445HS-RTX4050 6GB",
+        "category": "لپ‌تاپ",
+        "price": "183,870,000 تومان",
+        "specs": "پردازنده Ryzen 7 - رم نامشخص - گرافیک NVIDIA GeForce RTX 4050 - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 24,
+        "name": "لپ‌تاپ 15.6\" ایسر مدل Nitro V 15 ANV15-41-R05Y-R7 7735HS",
+        "category": "لپ‌تاپ",
+        "price": "133,000,000 تومان",
+        "specs": "پردازنده Ryzen 7 - رم نامشخص - گرافیک NVIDIA GeForce RTX 3050 - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 25,
+        "name": "لپ‌تاپ 15.6\" لنوو مدل V15 G2 IJL",
+        "category": "لپ‌تاپ",
+        "price": "46,000,000 تومان",
+        "specs": "پردازنده Celeron - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 26,
+        "name": "لپ‌تاپ ایسوس مدل Vivobook 15 X1504VA-NJ379 با پردازنده Core i7-1355U، رم 8GB DDR4 با فرکانس 3200MHz، حافظه SSD با ظرفیت 512GB، نمایشگر 15.6 اینچ TFT با وضوح Full HD",
+        "category": "لپ‌تاپ",
+        "price": "98,400,000 تومان",
+        "specs": "پردازنده Core i7 - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 512 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 27,
+        "name": "لپ‌تاپ 14\" ایسوس مدل Vivobook Go 14 E410KA-CL4128",
+        "category": "لپ‌تاپ",
+        "price": "41,590,000 تومان",
+        "specs": "پردازنده Celeron - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 128 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    },
+    {
+        "id": 28,
+        "name": "لپ‌تاپ 15.6\" اچ‌ پی مدل G9 250",
+        "category": "لپ‌تاپ",
+        "price": "49,599,000 تومان",
+        "specs": "پردازنده Celeron - رم نامشخص - گرافیک Intel UHD Graphics (integrated) - حافظه 256 گیگابایت - نمایشگر نامشخص",
+        "description": ""
+    }
+]
