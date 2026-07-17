@@ -1,4 +1,5 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; 
+font-family: 'Vazir', Tahoma, sans-serif;}
 
         body {
             font-family: 'Vazir', Tahoma, sans-serif;
@@ -48,7 +49,7 @@
         .btn-admin {
             position: absolute;
             right: 20px;
-            top: 50%;
+            top: 55%;
             transform: translateY(-50%);
             background: #ffc107;
             color: #333;

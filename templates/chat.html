@@ -10,13 +10,28 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
+                        <button onclick="clearChat()" style="
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Vazir', Tahoma;
+    font-size: 14px;
+    margin-right: 10px;
+">
+    🗑️ شروع چت جدید
+</button>
             <button class="btn-products" onclick="openProductsModal()">📦 محصولات</button>
             {% if is_admin %}
+            
             <button class="btn-admin" onclick="window.location.href='/admin'">🛠️ پنل مدیریت</button>
             {% endif %}
             <button class="btn-logout" onclick="window.location.href='/logout'">🚪 خروج</button>
             <h1>🛍️ علی شاپ</h1>
             <p>دستیار هوشمند فروشگاه | خوش آمدید {{ user_email }}</p>
+
         </div>
 
 
@@ -137,6 +152,28 @@
 
         // نمایش اولیه محصولات در مودال
         showCategory('همه');
+        
+        function clearChat() {
+    if (confirm('با شروع چت جدید، تاریخچه مکالمه قبلی پاک می‌شود. ادامه می‌دهید؟')) {
+        fetch('/clear_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // پاک کردن پیام‌های چت
+                document.getElementById('chatMessages').innerHTML = '';
+                alert('چت جدید شروع شد!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+}
     </script>
 </body>
 </html>

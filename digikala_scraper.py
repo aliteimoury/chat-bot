@@ -9,19 +9,37 @@ scraper = cloudscraper.create_scraper(
 )
 
 
-def clean_product_name(title_fa, category_type):
-    if category_type == "laptop":
-        # پیدا کردن اولین جایی که پردازنده (i3, i5, Ryzen) یا رم و حافظه (GB, TB) شروع می‌شه
-        pattern = r'(?i)\s*-\s*(i\d|Ryzen|Core|Pentium|Celeron|\d+\s*GB|\d+\s*TB|SSD|HDD)'
-        clean_name = re.split(pattern, title_fa)[0].strip()
-        # جایگزینی کلمات طولانی برای زیبایی بیشتر (اختیاری)
-        clean_name = clean_name.replace("لپ تاپ", "لپ‌تاپ").replace(" اینچی", '"')
-        return clean_name
-    else:
-        # همون منطق قبلی برای موبایل
-        pattern = r'\s+(دو سیم|تک سیم|ظرفیت|حافظه|با رم|رم|نسخه|پک|نات اکتیو|-)'
-        clean_name = re.split(pattern, title_fa)[0].strip()
-        return clean_name.replace("گوشی موبایل", "گوشی")
+def clean_phone_name(title_fa):
+    # پاک کردن کلمات اضافی برای همه محصولات
+    patterns = [
+        r'\s+(دو سیم|تک سیم|ظرفیت|حافظه|با رم|رم|نسخه|پک|نات اکتیو|-)',
+        r'\s*\([^)]*\)\s*',  # حذف محتویات داخل پرانتز
+        r'\s*با\s*[^\s]+\s*',  # حذف "با ..."
+        r'\s*مقاوم\s*[^\s]+\s*',  # حذف "مقاوم ..."
+        r'\s*قابل\s*[^\s]+\s*',  # حذف "قابل ..."
+        r'\s*دارای\s*[^\s]+\s*',  # حذف "دارای ..."
+        r'\s*مناسب\s*[^\s]+\s*',  # حذف "مناسب ..."
+    ]
+    clean_name = title_fa
+    for pattern in patterns:
+        clean_name = re.sub(pattern, '', clean_name)
+
+     # جایگزینی کلمات اضافی برای دسته‌های مختلف
+    clean_name = clean_name.replace("گوشی موبایل", "گوشی")
+    clean_name = clean_name.replace("هدفون", "")
+    clean_name = clean_name.replace("هندزفری", "")
+    clean_name = clean_name.replace("بلوتوثی", "")
+    clean_name = clean_name.replace("بی سیم", "")
+    clean_name = clean_name.replace("بیسیم", "")
+    
+    # حذف فاصله‌های اضافی و کلمات تکراری
+    clean_name = re.sub(r'\s+', ' ', clean_name).strip()
+
+    # اگر اسم خالی شد، عنوان اصلی رو برگردون
+    if not clean_name:
+        clean_name = title_fa[:50]  # ۵۰ کاراکتر اول
+
+    return clean_name
 
 
 def get_phone_details(product_id):
@@ -29,95 +47,259 @@ def get_phone_details(product_id):
     try:
         response = scraper.get(url, timeout=15)
         if response.status_code == 200:
-            return response.json().get("data", {}).get("product", {})
+            data = response.json().get("data", {}).get("product", {})
+            # اطمینان از وجود categories
+            if "categories" not in data:
+                data["categories"] = []
+            return data
     except Exception as e:
         print(f"  [!] خطا در دریافت جزئیات محصول {product_id}: {e}")
     return None
 
 
-def parse_specifications(product_detail, category_type):
-    specifications = product_detail.get("specifications", [])
-    desc_string = ""
+def parse_specifications(product_detail):
+    # تشخیص دسته محصول از طریق categories
+    category = ""
+    category_list = product_detail.get("categories", [])
 
-    # گرفتن خلاصه توضیحات
+    # لیست کلمات کلیدی برای هر دسته
+    headphone_keywords = ["هدفون", "هندزفری", "headphone", "headset", "earphone"]
+    mobile_keywords = ["موبایل", "گوشی", "mobile", "phone"]
+    tablet_keywords = ["تبلت", "tablet", "ipad"]
+
+    for cat in category_list:
+        cat_title = cat.get("title", "").lower()
+        if any(keyword in cat_title for keyword in headphone_keywords):
+            category = "هدفون"
+            break
+        elif any(keyword in cat_title for keyword in mobile_keywords):
+            category = "موبایل"
+            break
+        elif any(keyword in cat_title for keyword in tablet_keywords):
+            category = "تبلت"
+            break
+
+# اگر دسته‌بندی هدفون بود، از تابع مخصوص استفاده کن
+    if category == "هدفون":
+        return parse_headphone_specifications(product_detail)
+
+    ram, storage, camera, battery, display = "نامشخص", "نامشخص", "نامشخص", "نامشخص", "نامشخص"
+    specifications = product_detail.get("specifications", [])
+    
+    # متغیر برای ذخیره موقت دوربین اصلی و سلفی
+    camera_main = "نامشخص"
+    camera_selfie = "نامشخص"
+    camera_raw_value = ""  # برای ذخیره مقدار خام دوربین
+    
+    for group in specifications:
+        for attr in group.get("attributes", []):
+            title = str(attr.get("title", "")).replace('\u200c', ' ').strip()
+            values_list = attr.get("values", [])
+            
+            if not values_list: 
+                continue
+            
+            value = values_list[0]
+            if isinstance(value, dict):
+                value = value.get("title", "نامشخص")
+            value = str(value).strip()
+            
+            # ============ پردازش حافظه داخلی (Storage) ============
+            storage_keywords = ["حافظه داخلی", "ظرفیت حافظه", "حافظه", "فضای ذخیره‌سازی"]
+            if any(keyword in title for keyword in storage_keywords):
+                if "گیگابایت" in value or "GB" in value or "ترابایت" in value:
+                    storage = value
+                    continue
+            
+            # ============ پردازش رم (RAM) ============
+            ram_keywords = ["مقدار RAM", "حافظه رم", "رم", "RAM", "حافظه موقت"]
+            if any(keyword in title for keyword in ram_keywords):
+                if "گیگابایت" in value or "GB" in value:
+                    ram = value
+                    continue
+            
+            # ============ پردازش دوربین (Camera) - بهبود یافته با اولویت مگاپیکسل ============
+            # بررسی دوربین اصلی (عقب)
+            main_camera_keywords = ["دوربین اصلی", "دوربین عقب", "رزولوشن دوربین اصلی", "کیفیت دوربین اصلی"]
+            is_main_camera = any(keyword in title for keyword in main_camera_keywords)
+            
+            # بررسی دوربین سلفی (جلو)
+            selfie_keywords = ["دوربین سلفی", "دوربین جلو", "رزولوشن دوربین سلفی", "کیفیت دوربین سلفی"]
+            is_selfie = any(keyword in title for keyword in selfie_keywords)
+            
+            # ===== استخراج مگاپیکسل از مقدار =====
+            # الگوهای مختلف برای پیدا کردن مگاپیکسل
+            mp_patterns = [
+                r'(\d+\.?\d*)\s*(مگاپیکسل|مگاپیکسلی|MP|mp)',  # 48 مگاپیکسل یا 48MP
+                r'(\d+\.?\d*)\s*(مگا پیکسل|مگا پیکسلی)',  # 48 مگا پیکسل
+                r'(\d+)\s*[\u0660-\u0669]+'  # اعداد فارسی
+            ]
+            
+            mp_value = None
+            for pattern in mp_patterns:
+                mp_match = re.search(pattern, value, re.IGNORECASE)
+                if mp_match:
+                    # استخراج عدد
+                    num = re.search(r'(\d+\.?\d*)', mp_match.group(0))
+                    if num:
+                        mp_value = f"{num.group(1)} مگاپیکسل"
+                        break
+            
+            # اگر مقدار مگاپیکسل پیدا شد
+            if mp_value:
+                # اگر دوربین اصلی بود یا کلید "دوربین" داشت
+                if is_main_camera or "دوربین" in title:
+                    if camera_main == "نامشخص" or is_main_camera:
+                        camera_main = mp_value
+                        continue
+                elif is_selfie:
+                    camera_selfie = mp_value
+                    continue
+                else:
+                    # اگر کلید خاصی نداشت ولی مگاپیکسل داشت، به عنوان دوربین اصلی در نظر بگیر
+                    if camera_main == "نامشخص" and "سلفی" not in title and "جلو" not in title:
+                        camera_main = mp_value
+                        continue
+            
+            # اگر مگاپیکسل پیدا نشد، ولی مقدار دوربین اصلی بود
+            if is_main_camera and camera_main == "نامشخص":
+                # بررسی اعداد در مقدار
+                num_match = re.search(r'(\d+)\s*(مگاپیکسل|MP|mega)', value, re.IGNORECASE)
+                if num_match:
+                    camera_main = f"{num_match.group(1)} مگاپیکسل"
+                elif "ماژول" not in value and len(value) > 5:
+                    # اگر مقدار مفیدی بود ذخیره کن
+                    camera_main = value
+                continue
+            
+            # ============ پردازش باتری (Battery) ============
+            battery_keywords = ["ظرفیت باتری", "باتری", "مشخصات باتری", "شارژ باتری"]
+            for keyword in battery_keywords:
+                if keyword in title:
+                    if battery == "نامشخص":
+                        # استخراج عدد از مقدار باتری
+                        battery_match = re.search(r'(\d+)\s*(میلی‌آمپر|mAh|وات‌ساعت|Wh)', value, re.IGNORECASE)
+                        if battery_match:
+                            battery = battery_match.group(0)
+                        else:
+                            battery = value
+                        break
+            
+            # ============ پردازش نمایشگر (Display) ============
+            display_keywords = ["صفحه نمایش", "نمایشگر", "اندازه صفحه", "ابعاد صفحه"]
+            for keyword in display_keywords:
+                if keyword in title:
+                    if "اینچ" in value or display == "نامشخص":
+                        display = value
+                        break
+
+    # انتخاب دوربین اصلی (اگر پیدا شد)
+    if camera_main != "نامشخص":
+        camera = camera_main
+    # اگر دوربین اصلی پیدا نشد، از دوربین سلفی استفاده کن
+    elif camera_selfie != "نامشخص":
+        camera = f"سلفی {camera_selfie}"
+    else:
+        camera = "نامشخص"
+
+    specs_string = f"رم {ram} - حافظه {storage} - دوربین {camera} - باتری {battery}"
+    desc_string = f"نمایشگر {display}"
+    
     summary = product_detail.get("review", {}).get("summary", "")
     if summary:
         summary = summary.replace("<p>", "").replace("</p>", "").replace("<br>", " ")
-        desc_string = f"{summary[:80]}..."
+        desc_string += f" - {summary[:100]}..."
+    
+    return specs_string, desc_string
 
-    # --- مشخصات لپ‌تاپ ---
-    if category_type == "laptop":
-        cpu_series, cpu_model = "", ""
-        ram_cap, ram_upgrade = "", ""
-        gpu_maker, gpu_model = "", ""
-        storage_cap, display_size = "نامشخص", "نامشخص"
 
-        for group in specifications:
-            for attr in group.get("attributes", []):
-                title = str(attr.get("title", "")).strip().replace('\u200c', ' ')
-                vals = attr.get("values", [])
-                if not vals: continue
-
-                val = vals[0]
-                if isinstance(val, dict): val = val.get("title", "نامشخص")
-                val = str(val).strip()
-
-                # استخراج دقیق و نقطه‌زن فیلدها
-                if title == "سری پردازنده":
-                    cpu_series = val
-                elif title == "مدل پردازنده":
-                    cpu_model = val
-                elif title == "ظرفیت حافظه RAM":
-                    ram_cap = val
-                elif title == "قابلیت ارتقای حافظه" or "ارتقا RAM" in title:
-                    ram_upgrade = val
-                elif title == "سازنده پردازنده گرافیکی":
-                    gpu_maker = val
-                elif title == "مدل پردازنده گرافیکی":
-                    gpu_model = val
-                elif title == "ظرفیت حافظه داخلی":
-                    storage_cap = val
-                elif title == "اندازه صفحه نمایش":
-                    display_size = val
-
-        # ترکیب مقادیر خرد شده با هم
-        cpu = f"{cpu_series} {cpu_model}".strip() if (cpu_series or cpu_model) else "نامشخص"
-        gpu = f"{gpu_maker} {gpu_model}".strip() if (gpu_maker or gpu_model) else "نامشخص"
-
-        # مدیریت نمایش رم و قابلیت ارتقا
-        ram = ram_cap if ram_cap else "نامشخص"
-        if ram_upgrade and ram_upgrade != "نامشخص":
-            ram += f" (قابلیت ارتقا: {ram_upgrade})"
-
-        specs_string = f"پردازنده {cpu} - رم {ram} - گرافیک {gpu} - حافظه {storage_cap} - نمایشگر {display_size}"
-        return specs_string, desc_string
-
-    # --- مشخصات موبایل ---
-    else:
-        ram, storage, camera, battery, display = "نامشخص", "نامشخص", "نامشخص", "نامشخص", "نامشخص"
-        for group in specifications:
-            for attr in group.get("attributes", []):
-                title = str(attr.get("title", "")).replace('\u200c', ' ')
-                vals = attr.get("values", [])
-                if not vals: continue
-
-                val = vals[0]
-                if isinstance(val, dict): val = val.get("title", "نامشخص")
-                val = str(val)
-
-                if "حافظه داخلی" in title:
-                    storage = val
-                elif "مقدار RAM" in title or "حافظه رم" in title or title == "رم":
-                    ram = val
-                elif "رزولوشن عکس" in title or "دوربین اصلی" in title or "دوربین" in title:
-                    if camera == "نامشخص": camera = val
-                elif "ظرفیت باتری" in title or "مشخصات باتری" in title or "باتری" in title:
-                    if battery == "نامشخص": battery = val
-                elif "اندازه" in title or "صفحه نمایش" in title or "ابعاد" in title:
-                    if "اینچ" in val or display == "نامشخص": display = val
-
-        specs_string = f"رم {ram} - حافظه {storage} - دوربین {camera} - باتری {battery}"
-        return specs_string, desc_string
+def parse_headphone_specifications(product_detail):
+    """پردازش مشخصات مخصوص هدفون"""
+    headphone_type = "نامشخص"      # بی سیم / سیمی
+    battery_life = "نامشخص"        # تعداد روز یا میلی آمپر
+    noise_canceling = "نامشخص"     # دارد / ندارد
+    bluetooth_version = "نامشخص"   # نسخه بلوتوث
+    
+    specifications = product_detail.get("specifications", [])
+    
+    for group in specifications:
+        for attr in group.get("attributes", []):
+            title = str(attr.get("title", "")).replace('\u200c', ' ').strip()
+            values_list = attr.get("values", [])
+            
+            if not values_list:
+                continue
+            
+            value = values_list[0]
+            if isinstance(value, dict):
+                value = value.get("title", "نامشخص")
+            value = str(value).strip()
+            
+            # ============ تشخیص نوع هدفون (بی سیم / سیمی) ============
+            if "نوع" in title or "اتصال" in title or "رابط" in title:
+                if "بی سیم" in value or "بیسیم" in value or "وایرلس" in value or "wireless" in value.lower():
+                    headphone_type = "بی سیم"
+                elif "سیمی" in value or "با سیم" in value or "wired" in value.lower():
+                    headphone_type = "سیمی"
+                continue
+            
+            # ============ تشخیص باتری (ساعت یا روز) - بهبود یافته ============
+            if "باتری" in title or "شارژ" in title or "عمر باتری" in title:
+                # استخراج عدد و واحد از مقدار
+                # الگوی: عدد + ساعت/روز
+                match = re.search(r'(\d+\.?\d*)\s*(ساعت|hour|h|hr|روز|day|Day)', value, re.IGNORECASE)
+                if match:
+                    num = match.group(1)
+                    unit = match.group(2)
+                    if "روز" in unit or "day" in unit.lower():
+                        battery_life = f"{num} روز"
+                    else:
+                        battery_life = f"{num} ساعت"
+                else:
+                    # اگر ساعت/روز نبود، میلی آمپر رو استخراج کن
+                    mah_match = re.search(r'(\d+)\s*(میلی‌آمپر|mAh|MAH)', value, re.IGNORECASE)
+                    if mah_match:
+                        battery_life = f"{mah_match.group(1)} میلی‌آمپر"
+                    else:
+                        battery_life = value
+                continue
+            
+            # ============ تشخیص نویز کنسلینگ ============
+            if "نویز" in title or "کنسلینگ" in title or "حذف نویز" in title or "ANC" in title:
+                if "دارد" in value or "فعال" in value or "بله" in value or "دارای" in value:
+                    noise_canceling = "دارد"
+                elif "ندارد" in value or "غیرفعال" in value or "خیر" in value or "بدون" in value:
+                    noise_canceling = "ندارد"
+                else:
+                    noise_canceling = value
+                continue
+            
+            # ============ تشخیص نسخه بلوتوث ============
+            if "بلوتوث" in title or "Bluetooth" in title or "نسخه بلوتوث" in title:
+                bt_match = re.search(r'(\d+\.?\d*)', value)
+                if bt_match:
+                    bluetooth_version = f"بلوتوث {bt_match.group(1)}"
+                else:
+                    bluetooth_version = value
+                continue
+    
+    # ساخت رشته مشخصات هدفون (فقط اطلاعات مفید)
+    specs_parts = []
+    if headphone_type != "نامشخص":
+        specs_parts.append(f"نوع: {headphone_type}")
+    if battery_life != "نامشخص":
+        specs_parts.append(f"باتری: {battery_life}")
+    if noise_canceling != "نامشخص":
+        specs_parts.append(f"نویز کنسلینگ: {noise_canceling}")
+    if bluetooth_version != "نامشخص":
+        specs_parts.append(f"اتصال: {bluetooth_version}")
+    
+    specs_string = " - ".join(specs_parts) if specs_parts else "مشخصات کامل نیست"
+    desc_string = f"هدفون {headphone_type}" if headphone_type != "نامشخص" else "هدفون"
+    if battery_life != "نامشخص":
+        desc_string += f" با {battery_life} شارژ"
+    
+    return specs_string, desc_string
 
 def get_best_price(search_product, detail_product):
     selling_price = 0
@@ -151,18 +333,14 @@ def load_existing_data(filename):
     return []
 
 
-def scrape_digikala_phones(target_new_products=5, category_type="mobile"):
+def scrape_digikala_phones(target_new_products=5, category_slug="mobile-phone", category_name="موبایل"):
     """
     دریافت محصولات دیجی‌کالا.
-    ...
+    target_new_products: تعداد محصولات جدیدی که می‌خواهیم در هر بار اجرا پیدا و اضافه کنیم.
     """
-    if category_type == "laptop":
-        search_url = "https://api.digikala.com/v1/categories/notebook-netbook-ultrabook/search/"
-        cat_name = "لپ‌تاپ"
-    else:
-        search_url = "https://api.digikala.com/v1/categories/mobile-phone/search/"
-        cat_name = "موبایل"
-
+    # تنظیم لینک جستجو بر اساس دسته‌بندی
+    search_url = f"https://api.digikala.com/v1/categories/{category_slug}/search/"
+    
     output_filename = "products.json"
 
     # 1. خواندن داده‌های قبلی
@@ -203,7 +381,7 @@ def scrape_digikala_phones(target_new_products=5, category_type="mobile"):
                     break
 
                 original_title = p.get("title_fa", "بدون نام")
-                short_title = clean_product_name(original_title, category_type)
+                short_title = clean_phone_name(original_title)
 
                 # بررسی تکراری بودن بر اساس نام کوتاه شده
                 if short_title in existing_names:
@@ -216,7 +394,7 @@ def scrape_digikala_phones(target_new_products=5, category_type="mobile"):
                 product_detail = get_phone_details(p_id)
 
                 if product_detail:
-                    specs, description = parse_specifications(product_detail, category_type)
+                    specs, description = parse_specifications(product_detail)
                 else:
                     specs, description = "نامشخص", "نامشخص"
 
@@ -225,7 +403,7 @@ def scrape_digikala_phones(target_new_products=5, category_type="mobile"):
                 formatted_product = {
                     "id": product_id_counter,
                     "name": short_title,
-                    "category": cat_name,
+                    "category": category_name,
                     "price": price_toman,
                     "specs": specs,
                     "description": description
@@ -254,9 +432,17 @@ def scrape_digikala_phones(target_new_products=5, category_type="mobile"):
         print(f"تعداد کل محصولات در فایل: {len(existing_products)}")
     else:
         print("\nهیچ محصول جدیدی یافت نشد. فایل تغییری نکرد.")
-
-
+        
+        
 if __name__ == "__main__":
-    # در اینجا مشخص می‌کنید که در هر بار اجرا، چند محصول *جدید* پیدا کند.
-    # الان روی 5 تنظیم شده است. اگر می‌خواهید تعداد بیشتری پیدا کند، عدد را تغییر دهید.
-    scrape_digikala_phones(target_new_products=25)
+    # اجرای استخراج موبایل‌ها
+    print("--- شروع استخراج موبایل‌ها ---")
+    scrape_digikala_phones(target_new_products=25, category_slug="mobile-phone", category_name="موبایل")
+    
+    # اجرای استخراج تبلت‌ها
+    print("\n--- شروع استخراج تبلت‌ها ---")
+    scrape_digikala_phones(target_new_products=25, category_slug="tablet", category_name="تبلت")
+    
+    # اجرای استخراج ساعت مچی (جایگزین هدفون)
+    print("\n--- شروع استخراج ساعت مچی ---")
+    scrape_digikala_phones(target_new_products=25, category_slug="wearable-gadget", category_name="ساعت هوشمند")

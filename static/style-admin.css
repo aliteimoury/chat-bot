@@ -1,4 +1,5 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box;
+font-family: 'Vazir', Tahoma, sans-serif; }
 
         body {
             font-family: 'Vazir', Tahoma, sans-serif;
@@ -412,4 +413,348 @@
 @keyframes spin{
     from{transform:rotate(0deg);}
     to{transform:rotate(360deg);}
+}
+/* ===== ساختار جدید برای اسکرول فقط جدول ===== */
+.container {
+    display: flex;
+    flex-direction: column;
+    max-height: 98vh;
+    overflow: hidden;
+}
+
+/* هدر ثابت */
+.header {
+    flex-shrink: 0;
+}
+
+/* تب‌ها ثابت */
+.tabs {
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+/* کارت‌های آمار ثابت */
+.stats {
+    flex-shrink: 0;
+}
+
+/* محتوای تب محصولات به صورت ستون با ارتفاع محدود */
+#products.tab-content {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 30px;
+    overflow: hidden;
+}
+
+#products.tab-content.active {
+    display: flex;
+}
+
+/* محفظه جدول با قابلیت اسکرول */
+.products-table-wrapper {
+    flex: 1;
+    overflow-y: auto !important;
+    min-height: 0;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    position: relative;
+    max-height: 500px !important; /* یا هر ارتفاع دلخواه */
+}
+
+
+/* ===== جدول محصولات ===== */
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    margin: 0;
+    table-layout: auto;
+}
+/* ===== سربرگ جدول ثابت ===== */
+.products-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.products-table thead tr {
+    display: table-row;
+}
+
+.products-table thead th {
+    background: #667eea !important;
+    color: white;
+    padding: 15px 12px;
+    text-align: right;
+    font-weight: 500;
+    white-space: nowrap;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    border-bottom: 3px solid #5a67d8;
+}
+/* ===== اطمینان از ثابت ماندن سربرگ ===== */
+.products-table thead th:first-child {
+    border-radius: 0 10px 0 0;
+}
+.products-table thead th:last-child {
+    border-radius: 10px 0 0 0;
+}
+/* ===== بدنه جدول ===== */
+.products-table tbody {
+    display: table-row-group;
+}
+.products-table tbody td {
+    padding: 12px 12px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+    background: white;
+}
+
+
+.products-table tbody tr:hover td {
+    background: #f8f9fa;
+}
+.products-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.products-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.products-table thead th {
+    border-bottom: 3px solid #5a67d8;
+}
+/* ===== تنظیمات سایر تب‌ها ===== */
+#add.tab-content,
+#logs.tab-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* ===== ریسپانسیو برای موبایل ===== */
+@media (max-width: 768px) {
+    #products.tab-content {
+        padding: 15px;
+    }
+    
+    .products-table-wrapper {
+        max-height: 50vh;
+    }
+    
+    .products-table thead th,
+    .products-table tbody td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+.edit-btn {
+    background: #ffc107;
+    color: #333;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 5px;
+    font-family: 'Vazir', Tahoma;
+    transition: all 0.3s;
+}
+
+.edit-btn:hover {
+    background: #e0a800;
+    transform: scale(1.05);
+}
+/* ===== دکمه خروج ===== */
+.header .logout-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid white;
+    padding: 10px 25px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: 'Vazir', Tahoma;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.header .logout-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* ===== ریسپانسیو برای موبایل ===== */
+@media (max-width: 768px) {
+    .header > div {
+        flex-direction: column;
+        align-items: center !important;
+        text-align: center;
+    }
+    
+    .header > div > div {
+        margin-bottom: 15px;
+    }
+    
+    .header .logout-btn {
+        padding: 8px 20px;
+        font-size: 14px;
+    }
+}
+/* ===== استایل‌های فیلتر ===== */
+#categoryFilter {
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#categoryFilter:hover {
+    border-color: #667eea;
+}
+
+#categoryFilter:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#emptyMessage {
+    animation: fadeIn 0.5s;
+}
+
+/* ===== ریسپانسیو برای موبایل ===== */
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    
+    #categoryFilter {
+        width: 100%;
+    }
+    
+    #filterCount {
+        text-align: center;
+        margin-right: 0 !important;
+    }
+}
+/* ===== استایل آیدی‌ها ===== */
+.product-id {
+    font-weight: 600;
+    color: #667eea;
+}
+
+/* انیمیشن تغییر آیدی */
+.product-id {
+    transition: all 0.3s ease;
+}
+/* ===== بخش فیلتر ===== */
+.filter-container {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 10px;
+    flex-shrink: 0; /* جلوگیری از کوچک شدن */
+}
+
+.filter-container label {
+    font-weight: 500;
+    color: #333;
+    font-size: 15px;
+}
+
+#categoryFilter {
+    padding: 10px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-family: 'Vazir', Tahoma;
+    font-size: 14px;
+    background: white;
+    min-width: 150px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#categoryFilter:hover {
+    border-color: #667eea;
+}
+
+#categoryFilter:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#filterCount {
+    color: #6c757d;
+    font-size: 14px;
+    margin-right: auto;
+}
+
+.reset-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Vazir', Tahoma;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.reset-btn:hover {
+    background: #5a6268;
+    transform: scale(1.02);
+}
+
+/* ===== پیام خالی ===== */
+#emptyMessage {
+    display: none;
+    text-align: center;
+    padding: 50px 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-top: 20px;
+    animation: fadeIn 0.5s;
+}
+
+#emptyMessage .empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+#emptyMessage h3 {
+    color: #6c757d;
+}
+
+#emptyMessage p {
+    color: #6c757d;
+}
+
+/* ===== اسکرول‌بار سفارشی ===== */
+.products-table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.products-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.products-table-wrapper::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.products-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #5a67d8;
 }

@@ -10,9 +10,32 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛍️ پنل مدیریت فروشگاه علی شاپ</h1>
-            <p>مدیریت محصولات، مشاهده مکالمات و تنظیمات فروشگاه</p>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="margin: 0;">🛍️ پنل مدیریت فروشگاه علی شاپ</h1>
+            <p style="margin: 5px 0 0;">مدیریت محصولات، مشاهده مکالمات و تنظیمات فروشگاه</p>
         </div>
+        <a href="/" style="text-decoration: none;">
+            <button style="
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 2px solid white;
+                padding: 10px 25px;
+                border-radius: 10px;
+                font-size: 16px;
+                font-family: 'Vazir', Tahoma;
+                cursor: pointer;
+                transition: all 0.3s;
+                font-weight: 500;
+                backdrop-filter: blur(10px);
+                white-space: nowrap;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='scale(1.05)';" 
+               onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1)';">
+                🚪 خروج
+            </button>
+        </a>
+    </div>
+</div>
 
 
         <div class="tabs">
@@ -43,28 +66,62 @@
         {% endfor %}
     {% endif %}
 {% endwith %}
+<!-- بخش فیلتر دسته‌بندی -->
+<div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px 20px; border-radius: 10px;">
+    <label style="font-weight: 500; color: #333; font-size: 15px;">🔍 فیلتر بر اساس دسته‌بندی:</label>
+    <select id="categoryFilter" onchange="filterProducts()" style="padding: 10px 20px; border: 2px solid #e9ecef; border-radius: 8px; font-family: 'Vazir', Tahoma; font-size: 14px; background: white; min-width: 150px;">
+        <option value="all">📋 همه محصولات</option>
+        <option value="موبایل">📱 موبایل</option>
+        <option value="لپ‌تاپ">💻 لپ‌تاپ</option>
+        <option value="هدفون">🎧 هدفون</option>
+        <option value="تبلت">📟 تبلت</option>
+        <option value="ساعت هوشمند">⌚ ساعت مچی</option>
+    </select>
+    <span id="filterCount" style="color: #6c757d; font-size: 14px; margin-right: auto;">تعداد: {{ products|length }} محصول</span>
+    <button onclick="resetFilter()" style="background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-family: 'Vazir', Tahoma; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+        🔄 نمایش همه
+    </button>
+</div>
+    
 
-            <table class="products-table">
-                <thead>
-                    <tr><th>شناسه</th><th>نام محصول</th><th>دسته‌بندی</th><th>قیمت</th><th>عملیات</th></tr>
-                </thead>
-                <tbody>
-                    {% for p in products %}
-                    <tr>
-                        <td>{{ p.id }}</td>
-                        <td>{{ p.name }}</td>
-                        <td>{{ p.category }}</td>
-                        <td>{{ p.price }}</td>
-                        <td>
-                            <button onclick="openEditModal({{ p.id }}, '{{ p.name }}', '{{ p.category }}', '{{ p.price|replace(' تومان', '') }}', '{{ p.specs }}', '{{ p.description }}')" class="edit-btn" style="background:#ffc107; color:#333; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin-left:5px;">✏️ ویرایش</button>
-                            <form action="/delete/{{ p.id }}" method="POST" style="display:inline">
-                                <button type="submit" class="delete-btn" onclick="return confirm('آیا از حذف این محصول مطمئن هستید؟')">🗑️ حذف</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- محفظه جدول با اسکرول -->
+<div class="products-table-wrapper">
+    <table class="products-table" id="productsTable">
+        
+        <thead>
+            <tr>
+                <th>شناسه</th>
+                <th>نام محصول</th>
+                <th>دسته‌بندی</th>
+                <th>قیمت</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="productsBody">
+            {% for p in products %}
+            <tr data-category="{{ p.category }}" data-original-id="{{ p.id }}">
+                <td class="product-id">{{ p.id }}</td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.category }}</td>
+                <td>{{ p.price }}</td>
+                <td>
+                    <button onclick="openEditModal({{ p.id }}, '{{ p.name }}', '{{ p.category }}', '{{ p.price|replace(',', '')|replace(' تومان', '')|replace(' ', '') }}', '{{ p.specs }}', '{{ p.description }}')" class="edit-btn">✏️ ویرایش</button>
+                    <form action="/delete/{{ p.id }}" method="POST" style="display:inline">
+                        <button type="submit" class="delete-btn" onclick="return confirm('آیا از حذف این محصول مطمئن هستید؟')">🗑️ حذف</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- پیام خالی بودن دسته‌بندی -->
+<div id="emptyMessage" style="display: none; text-align: center; padding: 50px 20px; background: #f8f9fa; border-radius: 10px; margin-top: 20px;">
+    <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+    <h3 style="color: #6c757d;">هیچ محصولی در این دسته‌بندی وجود ندارد</h3>
+    <p style="color: #6c757d;">می‌توانید از طریق دکمه "افزودن محصول" یا "محصول خودکار از دیجی‌کالا" محصول جدید اضافه کنید.</p>
+</div>
             <!-- مدال ویرایش -->
 <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
     <div style="background:white; border-radius:20px; padding:30px; max-width:600px; width:90%; max-height:90%; overflow:auto;">
@@ -87,7 +144,7 @@
             </div>
             <div class="form-group">
                 <label>قیمت (فقط عدد)</label>
-                <input type="text" name="price" id="edit_price" required>
+                <input type="text" name="price" id="edit_price" required oninput="formatPriceInput(this)">
                 <small>تومان به طور خودکار اضافه می‌شود</small>
             </div>
             <div class="form-group">
@@ -191,8 +248,8 @@
             <label>دسته‌بندی محصول</label>
             <select id="scraperCategory">
                 <option value="mobile">📱 موبایل</option>
-                <option value="laptop">💻 لپ‌تاپ</option>
-                <option disabled>🎧 هدفون (به‌زودی)</option>
+                <option value="tablet">📟 تبلت</option>
+                <option value="watch">⌚ ساعت مچی</option>
             </select>
         </div>
 
@@ -316,11 +373,15 @@ function updateSpecsPreview() {
         document.getElementById('productForm')?.addEventListener('submit', function(e) {
             updateSpecsPreview();
         });
-        function openEditModal(id, name, category, price, specs, description) {
+function openEditModal(id, name, category, price, specs, description) {
     document.getElementById('edit_id').value = id;
     document.getElementById('edit_name').value = name;
     document.getElementById('edit_category').value = category;
-    document.getElementById('edit_price').value = price.replace(/[^0-9]/g, '');
+    
+    // حذف همه کاراکترهای غیرعددی (کاما، فاصله، تومان و ...)
+    let cleanPrice = price.replace(/[^0-9]/g, '');
+    document.getElementById('edit_price').value = cleanPrice;
+    
     document.getElementById('edit_specs').value = specs;
     document.getElementById('edit_description').value = description;
     document.getElementById('editModal').style.display = 'flex';
@@ -378,7 +439,113 @@ function runScraper() {
         console.log(error);
     });
 }
+// فرمت کردن قیمت هنگام تایپ
+function formatPriceInput(input) {
+    // حذف همه کاراکترهای غیرعددی
+    let value = input.value.replace(/[^0-9]/g, '');
+    
+    // اگر عدد بود، با کاما فرمت کن
+    if (value) {
+        // تبدیل به عدد و فرمت با کاما
+        let num = parseInt(value);
+        input.value = num.toLocaleString('en-US');
+    }
+}
 
+// همچنین هنگام باز شدن مدال، قیمت رو فرمت کن
+function openEditModal(id, name, category, price, specs, description) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_category').value = category;
+    
+    // حذف همه کاراکترهای غیرعددی
+    let cleanPrice = price.replace(/[^0-9]/g, '');
+    
+    // فرمت کردن با کاما
+    if (cleanPrice) {
+        let num = parseInt(cleanPrice);
+        document.getElementById('edit_price').value = num.toLocaleString('en-US');
+    } else {
+        document.getElementById('edit_price').value = '';
+    }
+    
+    document.getElementById('edit_specs').value = specs;
+    document.getElementById('edit_description').value = description;
+    document.getElementById('editModal').style.display = 'flex';
+}
+// ===== فیلتر کردن محصولات بر اساس دسته‌بندی =====
+function filterProducts() {
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    const rows = document.querySelectorAll('#productsBody tr');
+    const emptyMessage = document.getElementById('emptyMessage');
+    let visibleCount = 0;
+    let newId = 1; // شمارنده برای آیدی‌های جدید
+    
+    rows.forEach(row => {
+        const category = row.getAttribute('data-category');
+        if (selectedCategory === 'all' || category === selectedCategory) {
+            row.style.display = 'table-row';
+            visibleCount++;
+            
+            // تغییر آیدی نمایشی
+            const idCell = row.querySelector('td:first-child');
+            if (idCell) {
+                idCell.textContent = newId;
+                newId++;
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // به‌روزرسانی تعداد محصولات
+    const filterCount = document.getElementById('filterCount');
+    if (selectedCategory === 'all') {
+        filterCount.textContent = `تعداد: ${rows.length} محصول`;
+        // وقتی همه محصولات نمایش داده میشن، آیدی‌ها رو به حالت اول برگردون
+        resetAllIds();
+    } else {
+        const categoryName = document.getElementById('categoryFilter').options[document.getElementById('categoryFilter').selectedIndex].text;
+        filterCount.textContent = `تعداد: ${visibleCount} محصول در دسته "${categoryName}"`;
+    }
+    
+    // نمایش یا پنهان کردن پیام خالی
+    if (visibleCount === 0 && selectedCategory !== 'all') {
+        emptyMessage.style.display = 'block';
+        document.querySelector('.products-table-wrapper').style.display = 'none';
+    } else {
+        emptyMessage.style.display = 'none';
+        document.querySelector('.products-table-wrapper').style.display = 'block';
+    }
+}
+
+// ===== ریست کردن آیدی‌ها به حالت اصلی =====
+function resetAllIds() {
+    const rows = document.querySelectorAll('#productsBody tr');
+    let originalId = 1;
+    rows.forEach(row => {
+        const idCell = row.querySelector('td:first-child');
+        if (idCell) {
+            idCell.textContent = originalId;
+            originalId++;
+        }
+    });
+}
+
+// ===== ریست کردن فیلتر =====
+function resetFilter() {
+    document.getElementById('categoryFilter').value = 'all';
+    filterProducts();
+    // بعد از فیلتر، آیدی‌ها رو ریست کن
+    setTimeout(resetAllIds, 50);
+}
+
+// ===== اجرای خودکار فیلتر هنگام بارگذاری صفحه =====
+document.addEventListener('DOMContentLoaded', function() {
+    filterProducts();
+    // اطمینان از درست بودن آیدی‌ها هنگام بارگذاری
+    setTimeout(resetAllIds, 100);
+});
 
 
     </script>
