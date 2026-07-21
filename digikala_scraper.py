@@ -9,35 +9,27 @@ scraper = cloudscraper.create_scraper(
 )
 
 
-def clean_phone_name(title_fa):
-    # پاک کردن کلمات اضافی برای همه محصولات
-    patterns = [
-        r'\s+(دو سیم|تک سیم|ظرفیت|حافظه|با رم|رم|نسخه|پک|نات اکتیو|-)',
-        r'\s*\([^)]*\)\s*',  # حذف محتویات داخل پرانتز
-        r'\s*با\s*[^\s]+\s*',  # حذف "با ..."
-        r'\s*مقاوم\s*[^\s]+\s*',  # حذف "مقاوم ..."
-        r'\s*قابل\s*[^\s]+\s*',  # حذف "قابل ..."
-        r'\s*دارای\s*[^\s]+\s*',  # حذف "دارای ..."
-        r'\s*مناسب\s*[^\s]+\s*',  # حذف "مناسب ..."
-    ]
-    clean_name = title_fa
-    for pattern in patterns:
-        clean_name = re.sub(pattern, '', clean_name)
+STOP_PATTERN = re.compile(
+    r'(ظرفیت|حافظه|دو سیم|تک سیم|نسخه\s|پک\s|نات اکتیو|\sبا\s|مقاوم\s|قابل\s|دارای\s|مناسب\s|\(|\s-\s|\s-$)'
+)
 
-     # جایگزینی کلمات اضافی برای دسته‌های مختلف
+def clean_phone_name(title_fa):
+    clean_name = title_fa
+    match = STOP_PATTERN.search(clean_name)
+    if match:
+        clean_name = clean_name[:match.start()]
+
     clean_name = clean_name.replace("گوشی موبایل", "گوشی")
     clean_name = clean_name.replace("هدفون", "")
     clean_name = clean_name.replace("هندزفری", "")
     clean_name = clean_name.replace("بلوتوثی", "")
     clean_name = clean_name.replace("بی سیم", "")
     clean_name = clean_name.replace("بیسیم", "")
-    
-    # حذف فاصله‌های اضافی و کلمات تکراری
+
     clean_name = re.sub(r'\s+', ' ', clean_name).strip()
 
-    # اگر اسم خالی شد، عنوان اصلی رو برگردون
     if not clean_name:
-        clean_name = title_fa[:50]  # ۵۰ کاراکتر اول
+        clean_name = title_fa[:50]
 
     return clean_name
 

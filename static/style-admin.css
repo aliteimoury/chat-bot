@@ -1,8 +1,8 @@
 * { margin: 0; padding: 0; box-sizing: border-box;
-font-family: 'Vazir', Tahoma, sans-serif; }
+font-family: 'Vazirmatn', Tahoma, sans-serif; }
 
         body {
-            font-family: 'Vazir', Tahoma, sans-serif;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -40,7 +40,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
             border: none;
             padding: 15px 30px;
             font-size: 16px;
-            font-family: 'Vazir', Tahoma;
+            font-family: 'Vazirmatn', Tahoma;
             cursor: pointer;
             transition: all 0.3s;
             color: #6c757d;
@@ -92,7 +92,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
             border: 2px solid #e9ecef;
             border-radius: 10px;
             font-size: 14px;
-            font-family: 'Vazir', Tahoma;
+            font-family: 'Vazirmatn', Tahoma;
             transition: all 0.3s;
         }
 
@@ -144,7 +144,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
             padding: 14px 30px;
             border-radius: 10px;
             font-size: 16px;
-            font-family: 'Vazir', Tahoma;
+            font-family: 'Vazirmatn', Tahoma;
             cursor: pointer;
             transition: all 0.3s;
             width: 100%;
@@ -199,7 +199,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 14px;
     border-radius: 10px;
     cursor: pointer;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     font-size: 15px;
     transition: 0.3s;
 }
@@ -215,7 +215,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 14px;
     border-radius: 10px;
     cursor: pointer;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     font-size: 15px;
     transition: 0.3s;
 }
@@ -229,7 +229,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     margin-bottom: 8px;
     font-weight: 500;
     color: #333;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
 }
 
 .scraper-body select {
@@ -237,7 +237,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 12px;
     border: 2px solid #e9ecef;
     border-radius: 10px;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     margin-bottom: 20px;
     font-size: 14px;
     transition: all 0.3s;
@@ -330,7 +330,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     border: 2px solid #e9ecef;
     border-radius: 10px;
     font-size: 14px;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     transition: 0.3s;
 }
 
@@ -352,7 +352,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 14px;
     border-radius: 10px;
     cursor: pointer;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     font-size: 15px;
     transition: 0.3s;
 }
@@ -557,7 +557,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     border-radius: 6px;
     cursor: pointer;
     margin-left: 5px;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     transition: all 0.3s;
 }
 
@@ -573,7 +573,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 10px 25px;
     border-radius: 10px;
     font-size: 16px;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     cursor: pointer;
     transition: all 0.3s;
     font-weight: 500;
@@ -674,7 +674,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 10px 20px;
     border: 2px solid #e9ecef;
     border-radius: 8px;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     font-size: 14px;
     background: white;
     min-width: 150px;
@@ -705,7 +705,7 @@ font-family: 'Vazir', Tahoma, sans-serif; }
     padding: 8px 20px;
     border-radius: 8px;
     cursor: pointer;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     font-size: 14px;
     transition: all 0.3s;
 }

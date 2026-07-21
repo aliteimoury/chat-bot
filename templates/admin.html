@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پنل مدیریت علی شاپ</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -23,7 +23,7 @@
                 padding: 10px 25px;
                 border-radius: 10px;
                 font-size: 16px;
-                font-family: 'Vazir', Tahoma;
+                font-family: 'Vazirmatn', Tahoma;
                 cursor: pointer;
                 transition: all 0.3s;
                 font-weight: 500;
@@ -69,7 +69,7 @@
 <!-- بخش فیلتر دسته‌بندی -->
 <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px 20px; border-radius: 10px;">
     <label style="font-weight: 500; color: #333; font-size: 15px;">🔍 فیلتر بر اساس دسته‌بندی:</label>
-    <select id="categoryFilter" onchange="filterProducts()" style="padding: 10px 20px; border: 2px solid #e9ecef; border-radius: 8px; font-family: 'Vazir', Tahoma; font-size: 14px; background: white; min-width: 150px;">
+    <select id="categoryFilter" onchange="filterProducts()" style="padding: 10px 20px; border: 2px solid #e9ecef; border-radius: 8px; font-family: 'Vazirmatn', Tahoma; font-size: 14px; background: white; min-width: 150px;">
         <option value="all">📋 همه محصولات</option>
         <option value="موبایل">📱 موبایل</option>
         <option value="لپ‌تاپ">💻 لپ‌تاپ</option>
@@ -78,7 +78,7 @@
         <option value="ساعت هوشمند">⌚ ساعت مچی</option>
     </select>
     <span id="filterCount" style="color: #6c757d; font-size: 14px; margin-right: auto;">تعداد: {{ products|length }} محصول</span>
-    <button onclick="resetFilter()" style="background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-family: 'Vazir', Tahoma; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+    <button onclick="resetFilter()" style="background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-family: 'Vazirmatn', Tahoma; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
         🔄 نمایش همه
     </button>
 </div>

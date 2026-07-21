@@ -9,6 +9,7 @@ import re
 import hashlib
 import digikala_scraper
 from datetime import timedelta
+from functools import wraps
 
 
 def hash_password(password):
@@ -32,6 +33,13 @@ USERS_FILE = "users.json"
 # کاربر ادمین (با ایمیل و رمز مشخص)
 ADMIN_EMAIL = "aliteimouri8503@gmail.com"
 ADMIN_PASSWORD = "33313850"
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if session.get('user_email') != ADMIN_EMAIL:
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated
 
 
 def load_products():
@@ -79,6 +87,45 @@ def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     return re.match(pattern, email) is not None
 
+def normalize_text(text):
+    """اعداد فارسی/عربی رو به انگلیسی تبدیل میکنه و حروف رو یکدست میکنه"""
+    if not text:
+        return ""
+    persian_digits = "۰۱۲۳۴۵۶۷۸۹"
+    arabic_digits = "٠١٢٣٤٥٦٧٨٩"
+    english_digits = "0123456789"
+    trans = str.maketrans(persian_digits + arabic_digits, english_digits + english_digits)
+    return text.translate(trans).lower().strip()
+
+STOPWORDS = {
+    "گوشی", "موبایل", "مدل", "محصول", "قیمت", "مشخصات", "گیگابایت",
+    "گیگ", "رم", "حافظه", "تومان", "چنده", "چقدر", "هست", "آیا",
+    "لطفا", "لطفاً", "میخوام", "برام", "درباره", "معرفی", "کن"
+}
+
+def find_matching_products(user_message, products):
+    """جستجوی هوشمند روی تمام محصولات - مستقل از تعداد و ترتیب"""
+    user_norm = normalize_text(user_message)
+    user_words = set(
+        w for w in re.findall(r'[\w\u0600-\u06FF]+', user_norm)
+        if len(w) > 2 and w not in STOPWORDS
+    )
+    scored = []
+    for p in products:
+        name_norm = normalize_text(p['name'])
+        if name_norm in user_norm:
+            scored.append((p, 1000))
+            continue
+        name_words = set(
+            w for w in re.findall(r'[\w\u0600-\u06FF]+', name_norm)
+            if len(w) > 2 and w not in STOPWORDS
+        )
+        overlap = user_words & name_words
+        if overlap:
+            scored.append((p, len(overlap)))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return [p for p, _ in scored][:20]
+
 
 def chat_with_ai(user_message, conversation_history=None):
     products = load_products()
@@ -97,48 +144,32 @@ def chat_with_ai(user_message, conversation_history=None):
             if len(word) > 3:  # کلمات با طول بیشتر از ۳
                 product_names.append(word.lower())
     
-    # تشخیص اینکه کاربر به محصول خاصی اشاره کرده
-    user_lower = user_message.lower()
-    mentioned_products = []
-    for p in products:
-        if p['name'].lower() in user_lower:
-            mentioned_products.append(p)
-        # چک کردن کلمات کلیدی
-        for word in p['name'].split():
-            if len(word) > 3 and word.lower() in user_lower:
-                if p not in mentioned_products:
-                    mentioned_products.append(p)
-    
-    # اگر محصولی پیدا نشد، جستجوی عمومی‌تر
-    if not mentioned_products:
-        # چک کردن دسته‌بندی‌ها
-        for p in products:
-            if p['category'].lower() in user_lower:
-                mentioned_products.append(p)
-    
-    # حذف تکراری‌ها
-    seen = set()
-    mentioned_products = [p for p in mentioned_products if p['name'] not in seen and not seen.add(p['name'])]
-    
-    # ===== ساخت لیست محصولات مرتبط =====
-    if mentioned_products:
-        # فقط محصولاتی که کاربر بهشون اشاره کرده
-        relevant_products = mentioned_products
-        is_specific = True
-    else:
-        # اگر محصول خاصی اشاره نشده، همه محصولات رو نشون بده
-        relevant_products = products[:10]  # حداکثر ۱۰ محصول
-        is_specific = False
-    
-    # ===== تشخیص نوع سوال =====
-    is_comparison = any(word in user_lower for word in ['مقایسه', 'compare', 'تفاوت', 'بین', 'بهتر', 'کدوم'])
-    is_price = any(word in user_lower for word in ['قیمت', 'چنده', 'چقدر', 'قیمتش', 'قیمت'])
-    is_specs = any(word in user_lower for word in ['مشخصات', 'ویژگی', 'spec', 'مشخصه', 'دوربین', 'رم', 'باتری'])
-    
-    # ===== ساخت متن محصولات =====
+    mentioned_products = find_matching_products(user_message, products)
+
+    # اگه توی پیام فعلی محصولی پیدا نشد، شاید سوال ادامه‌داره
+    # (مثل «قیمتشون چنده؟» یا «کدومش بهتره؟») - چندتا پیام آخر مکالمه رو هم بگرد
+    if not mentioned_products and conversation_history:
+        recent_text = " ".join(msg['content'] for msg in conversation_history[-6:])
+        mentioned_products = find_matching_products(recent_text, products)
+
+    product_found = len(mentioned_products) > 0
+
+    if not product_found:
+        # اگه کاربر اصلاً کلمه‌ی مرتبط با محصول نگفته (مثلاً فقط سلام کرده)
+        # به‌جای «موجود نیست»، چندتا نمونه محصول معرفی کن
+        user_norm = normalize_text(user_message)
+        has_product_keyword = any(
+            len(w) > 2 and w not in STOPWORDS
+            for w in re.findall(r'[\w\u0600-\u06FF]+', user_norm)
+        )
+        if not has_product_keyword:
+            sample_text = "\n".join(f"- {p['name']}" for p in products[:5])
+            return f"سلام! 👋 می‌تونید درباره‌ی قیمت، مشخصات یا مقایسه‌ی محصولاتی مثل این‌ها بپرسید:\n{sample_text}"
+        return "متأسفم، این محصول در حال حاضر در فروشگاه علی‌شاپ موجود نیست. لطفاً نام دقیق‌تری از محصول مورد نظرتون رو امتحان کنید 🙏"
+
     products_text = ""
-    if relevant_products:
-        for p in relevant_products[:10]:  # حداکثر ۱۰ محصول
+    if mentioned_products:
+        for p in mentioned_products[:15]:
             products_text += f"""
 نام: {p['name']}
 دسته: {p['category']}
@@ -146,49 +177,30 @@ def chat_with_ai(user_message, conversation_history=None):
 مشخصات: {p['specs']}
 -----------------"""
     else:
-        # اگر هیچ محصولی پیدا نشد
         all_products = ""
         for p in products[:5]:
             all_products += f"- {p['name']} ({p['category']})\n"
         products_text = f"محصولات موجود:\n{all_products}"
-    
-    # ===== ساخت تاریخچه =====
+
     history_text = ""
     if conversation_history:
         history_text = "\n【 تاریخچه مکالمه 】\n"
         for msg in conversation_history[-10:]:
-            if msg['role'] == 'user':
-                history_text += f"کاربر: {msg['content']}\n"
-            else:
-                history_text += f"دستیار: {msg['content']}\n"
+            role_label = "کاربر" if msg['role'] == 'user' else "دستیار"
+            history_text += f"{role_label}: {msg['content']}\n"
         history_text += "\n"
-    
-    # ===== تشخیص اینکه آیا محصول در لیست هست =====
-    product_found = len(mentioned_products) > 0
-    
-    # ===== پرامپت نهایی با قوانین سختگیرانه =====
-    if product_found:
-        main_instruction = f"""
+
+    main_instruction = """
 【 قوانین طلایی - بسیار مهم 】
-1. ✅ فقط و فقط از لیست محصولات زیر استفاده کن.
-2. ✅ اگر کاربر درباره محصولی سوال کرده که در لیست هست، دقیقاً مشخصاتش رو بگو.
-3. ✅ اگر کاربر از چند محصول نام برده، همه رو با هم مقایسه کن.
-4. ❌ تحت هیچ شرایطی از دانش خودت استفاده نکن.
-5. ❌ اگر محصولی در لیست نیست، نگو که هست.
-6. ❌ هیچ محصولی رو که در لیست نیست معرفی نکن.
-7. ⚠️ پاسخ‌ها رو دقیقاً بر اساس اطلاعات موجود در لیست بده.
+1. فقط از داده‌ی محصولاتی که در لیست پایین بهت داده میشه استفاده کن؛ این تنها منبع اطلاعاتی توئه.
+2. تحت هیچ شرایطی از دانش عمومی خودت درباره‌ی گوشی‌ها، قیمت‌ها یا مشخصات استفاده نکن، حتی اگه مطمئن باشی درسته.
+3. اگر کاربر درباره‌ی محصولی پرسید که در لیست نیست، دقیقاً بگو: "متأسفم، این محصول در حال حاضر در فروشگاه علی شاپ موجود نیست."
+4. هیچ‌وقت قیمت یا مشخصات محصولی که در لیست نیست رو حدس نزن.
+5. برای سوال قیمت فقط از فیلد «قیمت»، برای مشخصات فقط از فیلد «مشخصات» استفاده کن؛ خلاصه و مرتب بنویس.
+6. برای مقایسه‌ی چند محصول، فقط اونایی که در لیست هستن رو مقایسه کن.
+7. لحن مودب و حرفه‌ای مثل یک فروشنده‌ی مطلع داشته باش.
 """
-    else:
-        main_instruction = f"""
-【 قوانین طلایی - بسیار مهم 】
-1. ❌ کاربر به محصول خاصی اشاره نکرده است.
-2. ✅ از کاربر بخواه که اسم دقیق محصول رو بگه.
-3. ❌ هیچ محصولی رو که در لیست نیست معرفی نکن.
-4. ❌ از دانش خودت برای پیشنهاد محصول استفاده نکن.
-5. ⚠️ فقط بگو: "لطفاً نام دقیق محصول مورد نظر خود را بگویید تا بتوانم اطلاعات آن را ارائه دهم."
-"""
-    
-    # پرامپت نهایی
+
     prompt = f"""تو یک دستیار فروشگاه به نام 'علی شاپ' هستی.
 
 {main_instruction}
@@ -216,34 +228,14 @@ def chat_with_ai(user_message, conversation_history=None):
         result = response.json()
         answer = result.get("response", "متأسفم، نتونستم جواب بدم.")
         
-        # ===== اعتبارسنجی پاسخ =====
-        # اگر پاسخ شامل محصولی بود که در لیست نیست، تصحیح کن
-        answer_lower = answer.lower()
-        product_in_answer = False
-        
-        for p in products:
-            if p['name'].lower() in answer_lower:
-                product_in_answer = True
-                break
-        
-        # اگر محصولی در پاسخ بود ولی در لیست نبود، پیام خطا بده
-        if not product_in_answer and len(mentioned_products) > 0:
-            # کاربر محصولی رو پرسیده ولی مدل محصولی رو معرفی نکرده
-            fallback_message = f"📱 محصول مورد نظر شما در فروشگاه موجود است:\n"
-            for p in mentioned_products[:3]:
-                fallback_message += f"\n✅ {p['name']}\n   💰 قیمت: {p['price']}\n   ⚙️ مشخصات: {p['specs'][:100]}...\n"
-            if len(mentioned_products) > 3:
-                fallback_message += f"\nو {len(mentioned_products) - 3} محصول دیگر..."
-            answer = fallback_message
-        
-        # محدود کردن طول پاسخ
-        if len(answer) > 400:
-            answer = answer[:400] + "..."
-        
-        # حذف عبارات اضافی
-        answer = answer.replace("بله، این محصول موجود است.", "")
-        answer = answer.replace("بله موجود است.", "")
-        
+        # ===== شبکه‌ی ایمنی سبک: اگه محصول خاصی خواسته شده ولی اسمش در پاسخ نیومده، یادآوری کن =====
+        answer_norm = normalize_text(answer)
+        if product_found:
+            product_in_answer = any(normalize_text(p['name']) in answer_norm for p in mentioned_products)
+            if not product_in_answer and "موجود نیست" not in answer:
+                names = "، ".join(p['name'] for p in mentioned_products[:3])
+                answer += f"\n\n(ℹ️ بر اساس اطلاعات محصول: {names})"
+
         return answer.strip()
         
     except requests.exceptions.Timeout:
@@ -300,7 +292,6 @@ def login():
     return render_template("login.html",
                                   login_error="ایمیل یا رمز عبور اشتباه است",
                                   login_email=email,
-                                  login_password=password,
                                   register_error=None,
                                   register_success=None)
 
@@ -314,7 +305,6 @@ def register():
         return render_template("login.html",
                                       register_error="فقط ایمیل‌های Gmail معتبر هستند",
                                       register_email=email,
-                                      register_password=password,
                                       login_error=None,
                                       register_success=None,
                                       show_register=True)
@@ -325,7 +315,6 @@ def register():
         return render_template("login.html",
                                       register_error="رمز عبور حداقل ۸ کاراکتر باشد",
                                       register_email=email,
-                                      register_password=password,
                                       login_error=None,
                                       register_success=None,
                                       show_register=True)
@@ -335,7 +324,6 @@ def register():
         return render_template("login.html",
                                       register_error="این ایمیل قبلاً ثبت نام کرده است",
                                       register_email=email,
-                                      register_password=password,
                                       login_error=None,
                                       register_success=None,
                                       show_register=True)
@@ -398,33 +386,11 @@ def chat():
     session['conversation_history'] = conversation_history
     session.modified = True  # ✅ این خط رو حتماً اضافه کن
 
-    log_entry = {
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "question": user_message,
-        "answer": answer,
-        "products_mentioned": validated_products
-    }
-    try:
-        with open(LOGS_FILE, "r", encoding="utf-8") as f:
-            logs = json.load(f)
-    except:
-        logs = []
-    
-    logs.append(log_entry)
-    
-    with open(LOGS_FILE, "w", encoding="utf-8") as f:
-        json.dump(logs, f, ensure_ascii=False, indent=2)
-    
     # **لاگ رو ذخیره کن**
     save_log(user_message, answer)
-    
-    return jsonify({"reply": answer})
-    
 
-    
-    save_log(user_message, answer)
-    
     return jsonify({"reply": answer})
+    
 
 @app.route('/clear_chat', methods=['POST'])
 def clear_chat():
@@ -441,6 +407,7 @@ def make_session_permanent():
     app.permanent_session_lifetime = timedelta(minutes=30)  # ۳۰ دقیقه
 
 @app.route('/admin')
+@admin_required
 def admin_panel():
     products = load_products()
     logs = load_logs()
@@ -454,6 +421,7 @@ def admin_panel():
     return render_template("admin.html", products=products, logs=logs, categories=categories, message=None)
 
 @app.route('/add', methods=['POST'])
+@admin_required
 def add_product():
     products = load_products()
     new_id = max([p["id"] for p in products]) + 1 if products else 1
@@ -492,6 +460,7 @@ def reindex_products():
 
 
 @app.route('/delete/<int:product_id>', methods=['POST'])
+@admin_required
 def delete_product(product_id):
     products = load_products()
 
@@ -509,6 +478,7 @@ def delete_product(product_id):
     return redirect(url_for('admin_panel'))
 
 @app.route('/edit', methods=['POST'])
+@admin_required
 def edit_product():
     products = load_products()
     product_id = int(request.form['id'])
@@ -544,6 +514,7 @@ def edit_product():
 
 
 @app.route('/run_scraper', methods=['POST'])
+@admin_required
 def run_scraper():
     data = request.get_json()
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>علی شاپ - چت‌بات هوشمند</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="chat-container">
@@ -17,7 +17,7 @@
     padding: 8px 20px;
     border-radius: 8px;
     cursor: pointer;
-    font-family: 'Vazir', Tahoma;
+    font-family: 'Vazirmatn', Tahoma;
     font-size: 14px;
     margin-right: 10px;
 ">
@@ -76,11 +76,56 @@
         function handleKeyPress(event) {
             if (event.key === 'Enter') sendMessage();
         }
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function formatBotMessage(text) {
+            let safe = escapeHtml(text);
+
+            // حذف ### و رفتن به خط جدید (بدون نمایش خود #)
+            safe = safe.replace(/#{1,6}\s*/g, '<br><br>');
+
+            // تبدیل **متن** به بولد واقعی
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // هر جا با - یک آیتم جدید شروع شده، بره خط بعد
+            safe = safe.replace(/\s*-\s+(?=\S)/g, '<br>• ');
+
+            // تبدیل خط جدید واقعی (اگر مدل \n فرستاده باشه) به <br>
+            safe = safe.replace(/\n/g, '<br>');
+
+            // حذف <br> های اضافه‌ی ابتدای پیام
+            safe = safe.replace(/^(<br>\s*)+/, '');
+
+            return safe;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function formatBotMessage(text) {
+            let safe = escapeHtml(text);
+            safe = safe.replace(/#{1,6}\s*/g, '<br><br>');
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            safe = safe.replace(/\s*-\s+(?=\S)/g, '<br>• ');
+            safe = safe.replace(/\n/g, '<br>');
+            safe = safe.replace(/^(<br>\s*)+/, '');
+            return safe;
+        }
 
         function addMessage(text, isUser, time) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-            messageDiv.innerHTML = `<div class="message-bubble">${text}</div><div class="message-time">${time}</div>`;
+            const content = isUser ? escapeHtml(text) : formatBotMessage(text);
+            messageDiv.innerHTML = `<div class="message-bubble">${content}</div><div class="message-time">${time}</div>`;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -135,10 +180,10 @@
             filtered.forEach(p => {
                 productsHtml += `
                     <div class="product-item">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-price">💰 ${p.price}</div>
-                        <div style="font-size:12px; color:#666;">⚙️ ${p.specs}</div>
-                        <div style="font-size:12px;">📝 ${p.description}</div>
+                        <div class="product-name">${escapeHtml(p.name)}</div>
+                        <div class="product-price">💰 ${escapeHtml(p.price)}</div>
+                        <div style="font-size:12px; color:#666;">⚙️ ${escapeHtml(p.specs)}</div>
+                        <div style="font-size:12px;">📝 ${escapeHtml(p.description || '')}</div>
                     </div>
                 `;
             });
@@ -164,9 +209,9 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // پاک کردن پیام‌های چت
                 document.getElementById('chatMessages').innerHTML = '';
-                alert('چت جدید شروع شد!');
+                const now = new Date().toLocaleTimeString('fa-IR');
+                addMessage('سلام! به فروشگاه علی شاپ خوش آمدید 👋<br>می‌توانید قیمت، مشخصات و یا مقایسه محصولات را بپرسید.', false, now);
             }
         })
         .catch(error => {

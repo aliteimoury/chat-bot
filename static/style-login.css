@@ -1,7 +1,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; 
-font-family: 'Vazir', Tahoma, sans-serif;}
+font-family: 'Vazirmatn', Tahoma, sans-serif;}
         body {
-            font-family: 'Vazir', Tahoma, sans-serif;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -43,7 +43,7 @@ font-family: 'Vazir', Tahoma, sans-serif;}
             border: 2px solid #e9ecef;
             border-radius: 12px;
             font-size: 14px;
-            font-family: 'Vazir', Tahoma;
+            font-family: 'Vazirmatn', Tahoma;
             transition: all 0.3s;
         }
         .form-group input:focus {
@@ -58,7 +58,7 @@ font-family: 'Vazir', Tahoma, sans-serif;}
             border: none;
             border-radius: 12px;
             font-size: 16px;
-            font-family: 'Vazir', Tahoma;
+            font-family: 'Vazirmatn', Tahoma;
             cursor: pointer;
             margin-bottom: 10px;
         }
@@ -88,7 +88,7 @@ font-family: 'Vazir', Tahoma, sans-serif;}
             cursor: pointer;
             background: none;
             border: none;
-            font-family: 'Vazir', Tahoma;
+            font-family: 'Vazirmatn', Tahoma;
             font-size: 16px;
             transition: all 0.3s;
         }
